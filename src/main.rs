@@ -76,6 +76,7 @@ impl<'a> Application<'a> {
    fn toggle_colour(&mut self) {
        self.settings.colour = *self.colours.next().unwrap();
        self.update();
+       sleep(Duration::from_millis(100));
    }
    fn main_loop(&mut self) {
        self.update();
