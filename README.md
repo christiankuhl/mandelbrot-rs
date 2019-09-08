@@ -18,4 +18,4 @@ Invocation:
 ./target/release/mandelbrot-rs
 ```
 
-Klick left/right to zoom in/out, ESC to quit.
+Click left/right to zoom in/out, arrow keys to move around, ESC/q to quit.
