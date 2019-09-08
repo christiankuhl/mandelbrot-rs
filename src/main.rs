@@ -1,5 +1,7 @@
 use std::time::{Duration, Instant};
 use std::thread::sleep;
+use std::iter::Cycle;
+use std::slice::Iter;
 use minifb::{Window, WindowOptions, MouseMode, MouseButton, Key};
 use num::Complex;
 
@@ -10,7 +12,7 @@ const START_RANGE: PlotRange = PlotRange { top_left: Complex {re: -2.0, im: 1.25
                                            bottom_right: Complex {re: 1.0, im: -1.25}};
 const ZOOM: f32 = 2.0;
 const FRAME_DURATION: Duration = Duration::from_millis(17);
-const ACTIVE_KEYS: [Key; 6] = [Key::Left, Key::Right, Key::Up, Key::Down, Key::Q, Key::Escape];
+const ACTIVE_KEYS: [Key; 7] = [Key::Left, Key::Right, Key::Up, Key::Down, Key::Q, Key::Escape, Key::C];
 const STEP_SIZE: f32 = 0.05;
 
 fn main() {
@@ -33,29 +35,33 @@ fn escape_time(c: &Complex<f32>, settings: &ApplicationSettings) -> Option<f32> 
 
 struct ApplicationSettings {
     zoom: f32,
-    max_iterations: u32
+    max_iterations: u32,
+    colour: u32
 }
 
 struct Application<'a> {
    plot_range: PlotRange,
    window: &'a mut Window,
    settings: ApplicationSettings,
-   buffer: Vec<u32>
+   buffer: Vec<u32>,
+   colours: Cycle<Iter<'a, u32>>
 }
 
 impl<'a> Application<'a> {
    pub fn new(window: &'a mut Window) -> Application<'a> {
        let buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
-       let settings = ApplicationSettings {zoom: ZOOM, max_iterations: MAX_ITERATIONS};
+       let settings = ApplicationSettings {zoom: ZOOM, max_iterations: MAX_ITERATIONS, colour: 256};
+       let colour_iterator = [65536, 1, 256].iter().cycle();
        Application {plot_range: START_RANGE,
                     window: window,
                     settings: settings,
-                    buffer: buffer}
+                    buffer: buffer,
+                    colours: colour_iterator}
    }
    fn update(&mut self) {
        for (index, value) in self.buffer.iter_mut().enumerate() {
            let z = self.plot_range.index_to_point(index);
-           *value = 256 * escape_time(&z, &self.settings).unwrap_or(0.0) as u32;
+           *value = self.settings.colour * escape_time(&z, &self.settings).unwrap_or(0.0) as u32;
        }
        self.window.update_with_buffer(&self.buffer).unwrap();
    }
@@ -65,6 +71,10 @@ impl<'a> Application<'a> {
    }
    fn shift(&mut self, direction: Key){
        self.plot_range.shift(direction);
+       self.update();
+   }
+   fn toggle_colour(&mut self) {
+       self.settings.colour = *self.colours.next().unwrap();
        self.update();
    }
    fn main_loop(&mut self) {
@@ -89,6 +99,7 @@ impl<'a> Application<'a> {
                Some(Key::Down) => self.shift(Key::Down),
                Some(Key::Q) => return,
                Some(Key::Escape) => return,
+               Some(Key::C) => self.toggle_colour(),
                _ => ()
            }
            self.window.update_with_buffer(&self.buffer).unwrap();

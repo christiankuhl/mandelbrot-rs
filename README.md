@@ -12,10 +12,15 @@ cd mandelbrot-rs
 cargo build --release
 ```
 
-Invocation:
+### Invocation
 
 ```
 ./target/release/mandelbrot-rs
 ```
 
-Click left/right to zoom in/out, arrow keys to move around, ESC/q to quit.
+### Controls
+
+Click left/right to zoom in/out,
+arrow keys to move around,
+C to toggle colours,
+ESC or Q to quit.
