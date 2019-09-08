@@ -40,15 +40,19 @@ impl PlotRange {
                  im: (((index / WIDTH) as f32).floor()) / (HEIGHT as f32)
                          * self.height() + self.top_left.im}
     }
-    pub fn zoom_in(&mut self, point: &(f32, f32), settings: &ApplicationSettings) {
+    pub fn zoom(&mut self, point: &(f32, f32), out: bool, settings: &ApplicationSettings) {
         let h = self.height();
         let w = self.width();
+        let mut z = settings.zoom;
+        if out {
+            z = 1.0 / z;
+        }
         let mid_x = point.0 / (WIDTH as f32) * w + self.top_left.re;
         let mid_y = point.1 / (HEIGHT as f32) * h + self.top_left.im;
-        self.top_left = Complex {re: mid_x - w / (2.0 * settings.zoom),
-                                 im: mid_y - h / (2.0 * settings.zoom)};
-        self.bottom_right = Complex {re: mid_x + w / (2.0 * settings.zoom),
-                                     im: mid_y + h / (2.0 * settings.zoom)};
+        self.top_left = Complex {re: mid_x - w / (2.0 * z),
+                                 im: mid_y - h / (2.0 * z)};
+        self.bottom_right = Complex {re: mid_x + w / (2.0 * z),
+                                     im: mid_y + h / (2.0 * z)};
     }
     pub fn height(&self) -> f32 {
         self.bottom_right.im - self.top_left.im
@@ -93,8 +97,8 @@ impl<'a> Application<'a> {
        }
        self.window.update_with_buffer(&self.buffer).unwrap();
    }
-   fn zoom_in(&mut self, point: (f32, f32)) {
-        self.plot_range.zoom_in(&point, &self.settings);
+   fn zoom(&mut self, point: &(f32, f32), out: bool) {
+        self.plot_range.zoom(&point, out, &self.settings);
         self.update();
    }
    fn main_loop(&mut self) {
@@ -105,10 +109,11 @@ impl<'a> Application<'a> {
            if let Some(wait_time) = FRAME_DURATION.checked_sub(now.duration_since(start)) {
                sleep(wait_time);
            }
-           let left_down = self.window.get_mouse_down(MouseButton::Left);
-           if left_down {
+           let left_button = self.window.get_mouse_down(MouseButton::Left);
+           let right_button = self.window.get_mouse_down(MouseButton::Right);
+           if left_button || right_button {
                if let Some(point) = self.window.get_mouse_pos(MouseMode::Clamp) {
-                   self.zoom_in(point);
+                   self.zoom(&point, right_button);
                }
            }
            self.window.update_with_buffer(&self.buffer).unwrap();
