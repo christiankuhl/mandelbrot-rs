@@ -10,10 +10,10 @@ const WIDTH: usize = 640;
 const HEIGHT: usize = 480;
 const START_RANGE: PlotRange = PlotRange { top_left: Complex {re: -2.0, im: 1.25},
                                            bottom_right: Complex {re: 1.0, im: -1.25}};
-const ZOOM: f32 = 2.0;
+const ZOOM: f64 = 2.0;
 const FRAME_DURATION: Duration = Duration::from_millis(17);
 const ACTIVE_KEYS: [Key; 7] = [Key::Left, Key::Right, Key::Up, Key::Down, Key::Q, Key::Escape, Key::C];
-const STEP_SIZE: f32 = 0.05;
+const STEP_SIZE: f64 = 0.05;
 
 fn main() {
     let mut window = Window::new("mandelbrot-rs", WIDTH, HEIGHT, WindowOptions::default()).unwrap();
@@ -21,20 +21,20 @@ fn main() {
     app.main_loop();
 }
 
-fn escape_time(c: &Complex<f32>, settings: &ApplicationSettings) -> Option<f32> {
+fn escape_time(c: &Complex<f64>, settings: &ApplicationSettings) -> Option<f64> {
     let mut z = Complex {re: 0.0, im: 0.0};
     for i in 0..settings.max_iterations {
         z = z*z + c;
         if z.norm_sqr() > 4.0 {
             let shade = 1.0 - (z.norm_sqr().log2() / 2.0).ln();
-            return Some((i as f32) + shade)
+            return Some((i as f64) + shade)
         }
     }
     None
 }
 
 struct ApplicationSettings {
-    zoom: f32,
+    zoom: f64,
     max_iterations: u32,
     colour: u32
 }
@@ -66,7 +66,7 @@ impl<'a> Application<'a> {
        self.window.update_with_buffer(&self.buffer).unwrap();
    }
    fn zoom(&mut self, point: &(f32, f32), out: bool) {
-        self.plot_range.zoom(&point, out, &self.settings);
+        self.plot_range.zoom(&point, out, &mut  self.settings);
         self.update();
    }
    fn shift(&mut self, direction: Key){
@@ -116,26 +116,29 @@ impl<'a> Application<'a> {
 }
 
 struct PlotRange {
-    top_left: Complex<f32>,
-    bottom_right: Complex<f32>
+    top_left: Complex<f64>,
+    bottom_right: Complex<f64>
 }
 
 impl PlotRange {
-    pub fn index_to_point(&self, index: usize) -> Complex<f32> {
-        Complex {re: ((index % WIDTH) as f32) / (WIDTH as f32)
+    pub fn index_to_point(&self, index: usize) -> Complex<f64> {
+        Complex {re: ((index % WIDTH) as f64) / (WIDTH as f64)
                         * self.width() + self.top_left.re,
-                 im: (((index / WIDTH) as f32).floor()) / (HEIGHT as f32)
+                 im: (((index / WIDTH) as f64).floor()) / (HEIGHT as f64)
                          * self.height() + self.top_left.im}
     }
-    pub fn zoom(&mut self, point: &(f32, f32), out: bool, settings: &ApplicationSettings) {
+    pub fn zoom(&mut self, point: &(f32, f32), out: bool, settings: &mut ApplicationSettings) {
         let h = self.height();
         let w = self.width();
         let mut z = settings.zoom;
         if out {
             z = 1.0 / z;
+            settings.max_iterations -= 5;
+        } else {
+            settings.max_iterations += 5;
         }
-        let mid_x = point.0 / (WIDTH as f32) * w + self.top_left.re;
-        let mid_y = point.1 / (HEIGHT as f32) * h + self.top_left.im;
+        let mid_x = (point.0 as f64) / (WIDTH as f64) * w + self.top_left.re;
+        let mid_y = (point.1 as f64) / (HEIGHT as f64) * h + self.top_left.im;
         self.top_left = Complex {re: mid_x - w / (2.0 * z),
                                  im: mid_y - h / (2.0 * z)};
         self.bottom_right = Complex {re: mid_x + w / (2.0 * z),
@@ -153,10 +156,10 @@ impl PlotRange {
         self.top_left += delta;
         self.bottom_right += delta;
     }
-    pub fn height(&self) -> f32 {
+    pub fn height(&self) -> f64 {
         self.bottom_right.im - self.top_left.im
     }
-    pub fn width(&self) -> f32 {
+    pub fn width(&self) -> f64 {
         self.bottom_right.re - self.top_left.re
     }
 }
