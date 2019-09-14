@@ -6,14 +6,17 @@ use minifb::{Window, WindowOptions, MouseMode, MouseButton, Key};
 use num::Complex;
 
 const MAX_ITERATIONS: u32 = 255;
-const WIDTH: usize = 640;
-const HEIGHT: usize = 480;
+const WIDTH: usize = 1024;
+const HEIGHT: usize = 768;
 const START_RANGE: PlotRange = PlotRange { top_left: Complex {re: -2.0, im: 1.25},
                                            bottom_right: Complex {re: 1.0, im: -1.25}};
 const ZOOM: f64 = 2.0;
 const FRAME_DURATION: Duration = Duration::from_millis(17);
-const ACTIVE_KEYS: [Key; 7] = [Key::Left, Key::Right, Key::Up, Key::Down, Key::Q, Key::Escape, Key::C];
+const ACTIVE_KEYS: [Key; 10] = [Key::Left, Key::Right, Key::Up, Key::Down, Key::Q, Key::Escape, Key::C,
+                               Key::NumPadPlus, Key::Minus, Key::NumPadMinus];
 const STEP_SIZE: f64 = 0.05;
+
+const MIDDLE: (f32, f32) = ((WIDTH / 2) as f32, (HEIGHT / 2) as f32);
 
 fn main() {
     let mut window = Window::new("mandelbrot-rs", WIDTH, HEIGHT, WindowOptions::default()).unwrap();
@@ -98,6 +101,9 @@ impl<'a> Application<'a> {
                Some(Key::Right) => self.shift(Key::Right),
                Some(Key::Up) => self.shift(Key::Up),
                Some(Key::Down) => self.shift(Key::Down),
+               Some(Key::NumPadPlus) => self.zoom(&MIDDLE, false),
+               Some(Key::NumPadMinus) => self.zoom(&MIDDLE, true),
+               Some(Key::Minus) => self.zoom(&MIDDLE, true),
                Some(Key::Q) => return,
                Some(Key::Escape) => return,
                Some(Key::C) => self.toggle_colour(),
