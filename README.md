@@ -1,8 +1,8 @@
 # mandelbrot-rs
 
-A simplistic zoomable visualisation of the Mandelbrot set in Rust.
+A simplistic zoomable visualisation of the [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set) in Rust.
 
-![alt text](https://github.com/christiankuhl/mandelbrot-rs/raw/master/screenshot.png "mandelbrot-rs")
+![mandelbrot-rs](https://github.com/christiankuhl/mandelbrot-rs/raw/master/screenshot.png "mandelbrot-rs")
 
 ## Installation and usage
 
